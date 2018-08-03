@@ -1,4 +1,0 @@
-board.c:54:6:STM_EVAL_LEDInit	24	static
-board.c:79:6:STM_EVAL_LEDOn	16	static
-board.c:93:6:STM_EVAL_LEDOff	16	static
-board.c:107:6:STM_EVAL_LEDToggle	16	static
