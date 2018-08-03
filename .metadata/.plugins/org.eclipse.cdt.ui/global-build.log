@@ -1,0 +1,48 @@
+01:26:02 **** Incremental Build of configuration Debug for project CANSystem ****
+Info: Internal Builder is used for build
+arm-atollic-eabi-gcc -c ../src/main.c -mthumb -mcpu=cortex-m3 -std=gnu11 -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -I../src -I../Libraries/STM32F10x_StdPeriph_Driver/inc -I../Libraries/CMSIS/Device/ST/STM32F10x/Include -I../Libraries/CMSIS/Include -O0 -ffunction-sections -fdata-sections -g -fstack-usage -Wall -specs=nano.specs -o src/main.o 
+In file included from ../src/main.c:33:0:
+../src/usr_usart.h:68:6: warning: conflicting types for built-in function 'putc'
+ void putc ( void* p, char c);
+      ^~~~
+../src/main.c: In function 'main':
+../src/main.c:83:6: warning: unused variable 'i' [-Wunused-variable]
+  int i=0;
+      ^
+../src/main.c: In function 'USART1_IRQHandler':
+../src/main.c:194:47: warning: pointer targets in passing argument 3 of 'usr_CAN_SendTexts' differ in signedness [-Wpointer-sign]
+   usr_CAN_SendTexts(USR_CAN,&usr_CanTxMessage,USART1_Rec_Buffer);
+                                               ^~~~~~~~~~~~~~~~~
+In file included from ../src/main.c:34:0:
+../src/usr_can.h:35:6: note: expected 'const char *' but argument is of type 'uint8_t * {aka unsigned char *}'
+ void usr_CAN_SendTexts(CAN_TypeDef *CANx,CanTxMsg *TxMessage, const char *Text );
+      ^~~~~~~~~~~~~~~~~
+../src/main.c:185:6: warning: unused variable 'i' [-Wunused-variable]
+  int i=0;
+      ^
+../src/main.c: In function 'USB_LP_CAN1_RX0_IRQHandler':
+../src/main.c:207:25: warning: unused variable 'j' [-Wunused-variable]
+  int i=0,pendingMessg=0,j=0;
+                         ^
+../src/main.c:207:6: warning: unused variable 'i' [-Wunused-variable]
+  int i=0,pendingMessg=0,j=0;
+      ^
+arm-atollic-eabi-gcc -c ../src/usr_can.c -mthumb -mcpu=cortex-m3 -std=gnu11 -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -I../src -I../Libraries/STM32F10x_StdPeriph_Driver/inc -I../Libraries/CMSIS/Device/ST/STM32F10x/Include -I../Libraries/CMSIS/Include -O0 -ffunction-sections -fdata-sections -g -fstack-usage -Wall -specs=nano.specs -o src/usr_can.o 
+In file included from ../src/usr_can.c:3:0:
+../src/usr_usart.h:68:6: warning: conflicting types for built-in function 'putc'
+ void putc ( void* p, char c);
+      ^~~~
+../src/usr_can.c:9:16: warning: 'Is_CharInStr' defined but not used [-Wunused-function]
+ static uint8_t Is_CharInStr(uint8_t c, uint8_t *str, int str_len)
+                ^~~~~~~~~~~~
+arm-atollic-eabi-gcc -o CANSystem.elf Libraries/STM32F10x_StdPeriph_Driver/src/misc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_adc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_bkp.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_can.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_cec.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_crc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dac.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dbgmcu.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dma.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_exti.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_flash.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_fsmc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_gpio.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_i2c.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_iwdg.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_pwr.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_rcc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_rtc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_sdio.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_spi.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_tim.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_usart.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_wwdg.o src/main.o src/printf.o src/startup_stm32f10x_hd.o src/stm32f1xx_it.o src/syscalls.o src/system_stm32f10x.o src/systick.o src/tiny_printf.o src/usr_can.o src/usr_usart.o -mthumb -mcpu=cortex-m3 -T../stm32_flash.ld -specs=nosys.specs -static -Wl,-cref,-u,Reset_Handler -Wl,-Map=CANSystem.map -Wl,--gc-sections -Wl,--defsym=malloc_getpagesize_P=0x80 -Wl,--start-group -lc -lm -Wl,--end-group -specs=nano.specs 
+/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.0.0/ide/jre/bin/java -jar /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.0.0/Tools/arm-atollic-reports.jar sizeinfo list CANSystem.elf 
+Generate build reports...
+Print size information
+   text	   data	    bss	    dec	    hex	filename
+  11232	     32	    764	  12028	   2efc	CANSystem.elf
+Print size information done
+Generate listing file
+Output sent to: CANSystem.list
+Generate listing file done
+Generate build reports done

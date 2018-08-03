@@ -1,0 +1,118 @@
+#include "systick.h"
+
+void SysTick_Init(void)
+
+{
+
+/* SystemFrequency / 1000    1ms中断一次
+
+* SystemFrequency / 100000  10us中断一次
+
+* SystemFrequency / 1000000 1us中断一次
+*
+* Set the time of a count. one count= SystemCoreClock frequency(72MHz) /100000
+* about 1us interrupt and TimingDelay var decrease 1.
+* Total delay time=TimingDelay*(SystemCoreClock/1000000)/72MHz
+* SysTick is on the AHB bus 72MHz frequency. 1/72 us one count. 1us/72counts
+
+*/
+    /*select system clock*/
+    RCC_ClocksTypeDef clock;
+    RCC_GetClocksFreq(&clock);
+
+
+if (SysTick_Config(clock.SYSCLK_Frequency/1000000)) // 72000000/1000000=72Hz 72*(1/72MHz)=1us
+
+{
+
+/* Capture error */
+
+while (1);
+
+}
+
+
+SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk ;//you must reset this bit to avoid the systick stop interrupt
+SysTick->CTRL&= ~ SysTick_CTRL_ENABLE_Msk;
+
+}
+
+
+
+void Delay_us(__IO uint32_t nTime)
+
+{
+
+    /*
+        Systick->LOAD: set the preload value for the next interrupt.
+                        The value will be load to VAL automatically
+        SysTick->VAL: Value used to be compared to trigger the interrupt
+                        After LOAD reg load value to VAL reg, the value decrease
+                        and the value is same as VAL's value, interrupt take place.
+                        After interrupt, both VAL, LOAD's values are cleaned.
+                        we need to set the VAL, LOAD again.
+        SysTick_CTRL_TICKINT_Msk:
+                        The Systick is exceptional interrupt. Only when you set
+                        TICKINT bit and set NVIC priority, can it jump to the handler.
+                        After finishing the operation in handler, you must reset this Bit
+                        to turn off interrupt to jump out handler. Otherwise, it can't jump
+                        out handler. Using SysTick_CTRL_TICKINT_Msk to turn off or on TICKINT
+
+    */
+//        extern __IO uint32_t TimingDelay;
+
+//        TimingDelay=nTime;
+        SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+//        SysTick->CTRL|=SysTick_CTRL_TICKINT_Msk ;
+//         /*using interrupt*/
+//        while(TimingDelay!=0)
+//        {
+//            SysTick->CTRL|=SysTick_CTRL_TICKINT_Msk ;
+//        }
+        /*without using interrupt*/
+         SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk ;
+           while(nTime!=0)
+        {
+            while((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0);
+            nTime--;
+        }
+        SysTick->CTRL &= ~ SysTick_CTRL_ENABLE_Msk; //close the system tick after delaying
+
+}
+
+
+void Delay_ms(uint32_t nTime)
+{
+    Delay_us(nTime*1000);
+
+}
+
+void TimingDelay_Decrement(void)
+
+{
+if (TimingDelay != 0x00)
+{
+
+    TimingDelay--;
+
+}
+
+
+}
+
+
+
+
+/**
+ * @brief SysTick_Handler
+ * function: SysTick exception interrupt handler
+ */
+void SysTick_Handler(void)
+{
+
+    TimingDelay_Decrement();
+    SysTick->CTRL|=SysTick_CTRL_TICKINT_Msk ;
+}
+
+
+

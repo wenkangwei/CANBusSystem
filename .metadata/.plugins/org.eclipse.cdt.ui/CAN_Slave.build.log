@@ -1,0 +1,24 @@
+01:22:09 **** Incremental Build of configuration Debug for project CAN_Slave ****
+Info: Internal Builder is used for build
+arm-atollic-eabi-gcc -c ../src/usr_can.c -mthumb -mcpu=cortex-m3 -std=gnu11 -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER -I../src -I../Libraries/STM32F10x_StdPeriph_Driver/inc -I../Libraries/CMSIS/Device/ST/STM32F10x/Include -I../Libraries/CMSIS/Include -O0 -ffunction-sections -fdata-sections -g -fstack-usage -Wall -specs=nano.specs -o src/usr_can.o 
+In file included from ../src/usr_can.c:3:0:
+../src/usr_usart.h:68:6: warning: conflicting types for built-in function 'putc'
+ void putc ( void* p, char c);
+      ^~~~
+../src/usr_can.c:9:16: warning: 'Is_CharInStr' defined but not used [-Wunused-function]
+ static uint8_t Is_CharInStr(uint8_t c, uint8_t *str, int str_len)
+                ^~~~~~~~~~~~
+arm-atollic-eabi-gcc -o CAN_Slave.elf Libraries/STM32F10x_StdPeriph_Driver/src/misc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_adc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_bkp.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_can.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_cec.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_crc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dac.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dbgmcu.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_dma.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_exti.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_flash.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_fsmc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_gpio.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_i2c.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_iwdg.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_pwr.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_rcc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_rtc.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_sdio.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_spi.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_tim.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_usart.o Libraries/STM32F10x_StdPeriph_Driver/src/stm32f10x_wwdg.o src/main.o src/printf.o src/startup_stm32f10x_md.o src/stm32f1xx_it.o src/syscalls.o src/system_stm32f10x.o src/systick.o src/tiny_printf.o src/usr_can.o src/usr_usart.o -mthumb -mcpu=cortex-m3 -T../stm32_flash.ld -specs=nosys.specs -static -Wl,-cref,-u,Reset_Handler -Wl,-Map=CAN_Slave.map -Wl,--gc-sections -Wl,--defsym=malloc_getpagesize_P=0x80 -Wl,--start-group -lc -lm -Wl,--end-group -specs=nano.specs 
+/opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.0.0/ide/jre/bin/java -jar /opt/Atollic_TrueSTUDIO_for_STM32_x86_64_9.0.0/Tools/arm-atollic-reports.jar sizeinfo list CAN_Slave.elf 
+Generate build reports...
+Print size information
+   text	   data	    bss	    dec	    hex	filename
+  10604	     28	    508	  11140	   2b84	CAN_Slave.elf
+Print size information done
+Generate listing file
+Output sent to: CAN_Slave.list
+Generate listing file done
+Generate build reports done
+
+01:22:11 Build Finished (took 2s.199ms)
+

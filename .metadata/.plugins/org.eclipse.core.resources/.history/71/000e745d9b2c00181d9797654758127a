@@ -1,0 +1,60 @@
+#include "usr_can.h"
+#include "stm32f10x_rcc.h"
+
+void usr_CAN_GPIOConfig()
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA|RCC_APB2Periph_AFIO,ENABLE);
+	//Initialize CAN Rx Pin
+	GPIO_InitStructure.GPIO_Pin=CAN1Rx_Pin;
+	GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_IPD;
+	GPIO_Init(CAN1Port,&GPIO_InitStructure);
+	//Initialize CAN Tx pin
+	GPIO_InitStructure.GPIO_Pin=CAN1Tx_Pin;
+	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_AF_PP;
+	GPIO_Init(CAN1Port,GPIO_InitStructure);
+}
+
+void usr_CAN_Config()
+{
+	CAN_InitTypeDef CAN_InitStructure ;
+	CAN_FilterInitTypeDef CANFilterStructure;
+	/*
+	 * CAN configuration table：
+	 *		-no bus-off management
+	 *		-no wake up mode
+	 *		-use normal operating mode
+	 *		-disable FIFO lock mode, enable new message enter
+	 *		-Baud rate =125k
+	 *
+	 * */
+
+	CAN_InitStructure.CAN_ABOM=DISABLE;			//disable bus-off management
+	CAN_InitStructure.CAN_AWUM=DISABLE;			//disable wake up mode
+	CAN_InitStructure.CAN_Mode=CAN_Mode_Normal;	//Normal mode
+	CAN_InitStructure.CAN_NART=DISABLE;			//disable no auto retransmission mode. CAN transmits data until success
+	CAN_InitStructure.CAN_RFLM=DISABLE;			//disable FIFO lock mode
+	CAN_InitStructure.CAN_TTCM=DISABLE;			//disable time trigger communication mode
+	CAN_InitStructure.CAN_TXFP=DISABLE;			//FIFO transmission priority is based on identifier num
+	CAN_InitStructure.CAN_BS1=CAN_BS1_5tq;
+	CAN_InitStructure.CAN_BS2=CAN_BS2_2tq;
+	CAN_InitStructure.CAN_SJW=CAN_SJW_1tq;
+	CAN_InitStructure.CAN_Prescaler=35;
+	CAN_DeInit(CAN1);
+	CAN_Init(CAN1, &CANFilterStructure);
+
+
+
+}
+
+void usr_CAN_SendMessg(CAN_TypeDef CANx, uint8_t *Data, uint8_t datalen)
+{
+
+}
+
+void usr_CAN_RecMessg(CAN_TypeDef CANx, uint8_t *Data)
+{
+
+}
+

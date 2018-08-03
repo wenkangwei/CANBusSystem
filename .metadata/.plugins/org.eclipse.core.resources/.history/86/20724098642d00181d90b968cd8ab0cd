@@ -1,0 +1,232 @@
+#include "usr_can.h"
+#include "stm32f10x_rcc.h"
+#include "usr_usart.h"
+#include "printf.h"
+#include "string.h"
+
+static void usr_CAN_GPIOConfig()
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD|RCC_APB2Periph_AFIO,ENABLE);
+	GPIO_PinRemapConfig(GPIO_Remap2_CAN1,ENABLE);
+	//Initialize CAN Rx Pin
+	GPIO_InitStructure.GPIO_Pin=CAN1Rx_Pin;
+	GPIO_InitStructure.GPIO_Speed=GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_IPD;
+	GPIO_Init(CAN1Port,&GPIO_InitStructure);
+	//Initialize CAN Tx pin
+	GPIO_InitStructure.GPIO_Pin=CAN1Tx_Pin;
+	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_AF_PP;
+	GPIO_Init(CAN1Port,&GPIO_InitStructure);
+}
+
+
+/*
+ * @ usr_CAN_Config:
+ * 		This function is to configure the settings of CAN bus mode, CAN filter mode, GPIO, RCC clock
+ *
+ * */
+void usr_CAN_Config()
+{
+	CAN_InitTypeDef CAN_InitStructure;
+	CAN_FilterInitTypeDef CAN_Filter1;
+	int i=0;
+	 /****************CAN1 GPIO config***************************/
+	usr_CAN_GPIOConfig();
+
+    /****************CAN1  RCC config***************************/
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1,ENABLE);
+    for(i=0;i<8;i++){
+    	//clean buffer data
+    	usr_CanRxMessage.Data[i]=0;
+    	usr_CanTxMessage.Data[i]=0;
+    	usr_CanTxData[i]=0;
+    	usr_CanRxData[i]=0;
+    }
+	/*
+	 * CAN configuration table：
+	 *		-no bus-off management
+	 *		-no wake up mode
+	 *		-use normal operating mode
+	 *		-disable FIFO lock mode, enable new message enter
+	 *		-Baud rate =125k
+	 *		-open mailbox0 empty interrupt and FIFO0 new message interrupt
+	 *	Initialize the CAN_Prescaler member
+								  1
+		  	BaudRate	= ------------------					= 1/8us = 125KHz
+							NominalBitTime
+
+		    NominalBitTime = 1 x tq + tBS1 + tBS2				= 1us + 5usec +2usec = 8us
+		    with:
+				tBS1 = tq x (TS1[3:0] + 1),						= 5usec
+				tBS2 = tq x (TS2[2:0] + 1),						= 3usec
+				tq = (BRP[9:0] + 1) x tPCLK                    	= 27.77777nsec x 36 = 1usec
+				tPCLK = time period of the APB1 clock, 36MHz   	= 27.77777nsec
+				BRP[9:0], TS1[3:0] and TS2[2:0] are defined in the CAN_BTR Register.
+				where tq refers to the Time quantum
+
+	 * */
+    CAN_DeInit(USR_CAN);
+	CAN_InitStructure.CAN_ABOM=DISABLE;			//disable bus-off management
+	CAN_InitStructure.CAN_AWUM=DISABLE;			//disable wake up mode
+	CAN_InitStructure.CAN_Mode=CAN_Mode_LoopBack;	//Normal mode
+	CAN_InitStructure.CAN_NART=ENABLE;			//disable no auto retransmission mode. CAN transmits data until success
+	CAN_InitStructure.CAN_RFLM=DISABLE;			//disable FIFO lock mode
+	CAN_InitStructure.CAN_TTCM=DISABLE;			//disable time trigger communication mode
+	CAN_InitStructure.CAN_TXFP=DISABLE;			//FIFO transmission priority is based on identifier num
+	CAN_InitStructure.CAN_BS1=CAN_BS1_5tq;
+	CAN_InitStructure.CAN_BS2=CAN_BS2_2tq;
+	CAN_InitStructure.CAN_SJW=CAN_SJW_1tq;
+	CAN_InitStructure.CAN_Prescaler=35;
+
+	CAN_Init(USR_CAN, &CAN_InitStructure);
+//	CAN_ITConfig(USR_CAN,CAN_IT_FMP0|CAN_IT_RQCP0,ENABLE);	//enable interrupt for mailbox0, FIFO0
+	/****************CAN Filter initialization*********************/
+	/*Here are the settings for a filter, including:
+	 * 		FIFO number, Filter number, Filter scale, Mask ID, LIst ID, Filter mode (list mode or mask mode)
+	 *If an identifier can pass a filter, the filter number  will be stored in Filter match index (FMI)
+	 *For an identifier which can pass several filters, the filter number to be stored in FMI can be chosen
+	 *For by following rules:
+	 * 1. filter scale priority: 32- bit filter > 16-bit filter
+	 * 2. Mode priority: List mode > mask mode
+	 * 3. Filter number priority: low number > higher number
+	 * 4. priority of rules: Filter Scale > Mode > Filter number
+	 * CAN Filter configuration table
+	 * 		-Filter numebr =1
+	 * 		-scale =32bits
+	 * 		-List mode ID= 0x00000000
+	 * 		-Mask mode ID=0x00000000
+	 * 		-FIFO= FIFO0
+	 * 		-mode= mask mode
+	 *
+	 * */
+	CAN_Filter1.CAN_FilterNumber=1;
+	CAN_Filter1.CAN_FilterMode=CAN_FilterMode_IdMask;
+	CAN_Filter1.CAN_FilterScale=CAN_FilterScale_32bit;
+	CAN_Filter1.CAN_FilterIdHigh=0x0000;
+	CAN_Filter1.CAN_FilterIdLow=0x0000;
+	CAN_Filter1.CAN_FilterMaskIdHigh=0x0000;
+	CAN_Filter1.CAN_FilterMaskIdLow=0x0000;
+	CAN_Filter1.CAN_FilterFIFOAssignment=USR_FIFO;
+	CAN_Filter1.CAN_FilterActivation=ENABLE;
+	CAN_FilterInit(&CAN_Filter1);
+
+
+}
+
+
+void usr_CAN_SetMessgFrame(CanTxMsg *TxMessage,uint32_t stdID, uint32_t ExID,  uint8_t IDE, uint8_t RTR, uint8_t DataLen,uint8_t *Data )
+{
+	int i=0;
+	TxMessage->StdId=stdID;
+	TxMessage->ExtId=ExID;
+	TxMessage->DLC=DataLen;
+	TxMessage->RTR=RTR;	//remote transmission request: send request to another node to obtain the information
+	TxMessage->IDE=IDE;	//identifier extension: the bit identify if the identifier is 11-bit or 29-bit
+	for(i=0;i<DataLen;i++){
+		TxMessage->Data[i]=Data[i];
+	}
+}
+
+void usr_CAN_SetTxData(CanTxMsg *Message, uint8_t *Data, uint8_t DataLen)
+{
+	int i=0;
+	Message->DLC=DataLen;
+	for(i=0; i<DataLen;i++)
+		Message->Data[i]=Data[i];
+}
+
+uint8_t usr_CANWaitTx(CAN_TypeDef *CANx, uint8_t mailbox)
+{
+	uint16_t count=0;
+	uint8_t state=0;
+//	wait for the completion of transmission
+	while((CAN_TransmitStatus(CANx,mailbox)!=CAN_TxStatus_Ok) && (count<255))
+	{
+		count++;
+	}
+	state= CAN_TransmitStatus(CANx, mailbox);
+	count=0;
+	while ((CAN_MessagePending(CANx, CAN_FIFO0) < 1) 							// NX: Wait TX FIFO to empty
+			&& (count != 0xFF))
+	{
+		count++;
+	}
+
+	return state;
+}
+/*
+ * @brief:
+ * @param CANx: x can be 0 or 1 depending on which CAN you use
+ * @param *Data: address of the buffer storing 0~8-byte data
+ * @param datalen: specify how many bytes in data buffer need to be sent
+ * */
+uint8_t usr_CAN_SendMessg(CAN_TypeDef *CANx,CanTxMsg *TxMessage)
+{
+	uint8_t mailbox;
+	uint8_t state;
+	/*Process of sending message:
+	 * 	load data to buffer--> send request to mail box and wait for empty mailbox --> load data to mailbox and send
+	 * 	--> check transmission status.
+	 *
+	 * */
+	mailbox=CAN_Transmit(CANx,TxMessage);	//send Tx request to an empty mailbox
+	if(mailbox != CAN_TxStatus_NoMailBox){
+		//if it finds an empty mailbox, wait for transmission complete.
+		state=usr_CANWaitTx(CANx,mailbox);
+		printf("\nMailBox:%d\n", mailbox);
+		switch(state)
+		{
+		case (CAN_TxStatus_Failed):
+				printf("\nTransmission Fail !\n");
+				break;
+		case (CAN_TxStatus_Ok):
+				printf("\nMessage Transmitted \n");
+				break;
+		case (CAN_TxStatus_Pending):
+				while(CAN_TransmitStatus(USR_CAN,mailbox)!=CAN_TxStatus_Ok);
+				printf("\nMessage has been sent\n");
+				printf("\nNumber of message pending: %d\n", CAN_MessagePending(USR_CAN, USR_FIFO));
+				break;
+		}
+
+	}
+	else{
+		//if no mailbox is empty
+		printf("\nCan't find an empty mailbox\n");
+	}
+
+	return mailbox;
+}
+
+uint8_t Is_CANRxValid(CanRxMsg *RxMessage,uint32_t id)
+{
+	if(RxMessage->StdId!=id)
+		return 0;
+	else
+		return 1;
+}
+
+
+
+
+/*
+ *
+ * */
+void usr_CAN_RecMessg(CAN_TypeDef *CANx, CanRxMsg *RxMessage)
+{
+
+	/*Process of CAN receive message:
+	 * 	message arrived mailbox -> check message validation -> FIFO read mailbox data to buffer
+	 * -> filter message
+	 *
+	 * */
+	CAN_Receive(CANx,USR_FIFO ,RxMessage);
+	memcpy((void *)usr_CanRxData, (void *)RxMessage->Data,RxMessage->DLC);
+	usr_CanRxData[7]='\0';
+	printf("-->CAN Bus Message: StdID: %d, Data:%s, DLC: %d",RxMessage->StdId,
+															usr_CanRxData,
+															RxMessage->DLC);
+
+}
+
